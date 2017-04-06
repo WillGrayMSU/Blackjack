@@ -55,15 +55,13 @@ def dynamic(deck, i):
     options = []
     if (len(deck)-i < 4):
         return 0
-    #print i
+    
     for p in range(2, len(deck) - i - 1):
         hand = deal(deck, i)
         dealer = deal(deck, i+1)
         if (len(deck[i+4:i+p+2]) > 0):
             hand += deck[i+4:i+p+2]
-        #print i
-        #print hand
-        #print total(hand)
+
         if (total(hand) > 21):
             options.append(-1 + dynamic(deck, i + p + 2)) #bust
             break
@@ -75,20 +73,89 @@ def dynamic(deck, i):
                 break
         if (total(dealer) > 21): #dealer bust
             dealer = []
-            #print "Dealer Bust: " + str(total(dealer))
         options.append((cmp(total(hand), total(dealer)) + dynamic(deck, i + p + d)))
-        #print "i=" + str(i) + ", p=" + str(p) + ", d=" + str(d)
-        #cont = raw_input(".")
-    #print options
+
     return max(options)
 
 
 def main():
-    dynamicAlg = False
-    if (str(raw_input("Dynamic Algorithm (Y/N) ")) == "Y"):
-            dynamicAlg = True
-    if (not dynamicAlg):
-        while (not dynamicAlg):
+    playing = True
+    user = str(raw_input("Autoplay= 1\nDynamic Algorithm = 2\nPlay Blackjack = 3\n>>> "))
+
+    if (user == '1'):
+        wallet = 0
+        walletArray = []
+        totalWinnings = 0
+        index = 0
+        deck = shuffle()
+        deckCount = 0
+        while (deckCount < 100):
+            if (index+4 > len(deck)): 
+                deck = shuffle()
+                index = 0
+                deckCount += 1
+                walletArray.append(wallet)
+                totalWinnings += wallet
+                wallet = 0
+            hand = deal(deck, index)
+            dealer = deal(deck, index+1)
+            index += 4
+            while ((evaluate(total(hand), total(dealer[1:])))and (index < len(deck))):
+                hand.append(hit(deck, index))
+                index += 1
+
+            if (total(hand) > 21):
+                wallet -= 1 #bust
+                
+
+            else:
+                while ((total(dealer) < 17) and (index < len(deck))):
+                    dealer.append(hit(deck, index))
+                    index += 1
+    
+                if (total(dealer) < total(hand)):
+                    wallet += 1 #Player has better hand
+
+                elif (total(dealer) == total(hand)):
+                       continue #Tie
+                    
+                elif (total(dealer) > 21):
+                    wallet += 1 #Dealer busts
+                       
+                else:
+                    wallet -= 1 #Dealer has better hand
+
+        
+        print "Total Autoplay Winnings: $" + str(totalWinnings)
+        minimumValue = min(walletArray)-1
+        stemPlot = [0] * abs(minimumValue)
+        while len(walletArray) > 0:
+            stemPlot[abs(walletArray.pop())] += 1
+            
+        
+        print stemPlot
+                       
+    elif (user == '2'):
+        answers = []
+        for each in range(100):
+            deck = shuffle()
+            #print deck
+            answers.append(dynamic(deck, 0))
+
+        answers.sort()
+        print answers
+        maximumValue = max(answers)+1
+        print "Total Winnings: $" + str(sum(answers))
+        stemPlot = [0] * maximumValue
+        while len(answers) > 0:
+            stemPlot[answers.pop()] += 1
+            
+        
+        print stemPlot
+                       
+    else:
+        wallet = 0
+        while (playing):
             deck = shuffle()
             hand = deal(deck, 0)
             dealer = deal(deck, 2)
@@ -104,6 +171,7 @@ def main():
                     print "Your Hand: " + str(hand)
             if (total(hand) > 21):
                 print "BUST! Dealer Wins"
+                wallet -= 1
             elif (total(hand) == 21):
                 print "Blackjack!!!"
 
@@ -115,22 +183,22 @@ def main():
                 if (total(dealer) < total(hand)):
                     print "Dealer's hand is: " + str(dealer)
                     print "YOU WIN!!!"
+                    wallet += 1
                 elif (total(dealer) == total(hand)):
                     print "Dealer's hand is: " + str(dealer)
                     print "You Tie!"
                 elif (total(dealer) > 21):
                     print "Dealer's hand is: " + str(dealer)
                     print "YOU WIN!!!"
+                    wallet += 1
                 else:
                     print "Dealer's hand is: " + str(dealer)
                     print "You Lost."
-                    
+                    wallet -= 1
+
+            print "You've made $" + str(wallet)       
             if (str(raw_input("Play Again? ")) == "N"):
-                dynamicAlg = True
-    else:
-        deck = shuffle()
-        print deck
-        print dynamic(deck, 0)
+                playing = False
                 
         
 main()
